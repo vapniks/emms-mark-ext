@@ -31,6 +31,9 @@
 ;; TODO : we can also define other utility functions to search for different fields
 ;; such as `emms-tag-mark-regexp-artist', `emms-tag-mark-regexp-album', etc.
 
+;; `emms-tag-editor-alter-notes-tag' can be used to add/remove word from
+;; tracks info-note tag. And the added tag will be separated by ":".
+
 ;;; Code:
 (require 'emms-mark)
 
@@ -75,6 +78,45 @@ turn it on."
 		 (field (emms-track-get track (intern tag))))
 	    (when (string-match-p regexp (or field ""))
 	      (emms-mark-track 1))))))))
+
+(defun emms-tag-editor-alter-notes-tag (notes arg)
+  "Alter arbitrary word tags to the info-note tag of tracks.
+The info-tag will have a list of words separated by \":\".
+If a prefix arg is supplied then the word should be removed from the
+info-note tag for each track. "
+  (interactive
+   (list (read-from-minibuffer (if current-prefix-arg
+				   "Remove notes: "
+				 "Add notes: "))
+	 current-prefix-arg))
+  (save-excursion
+    (save-restriction
+      (if (and mark-active transient-mark-mode)
+	  (narrow-to-region (region-beginning) (region-end)))
+      (goto-char (point-min))
+      (while (re-search-forward "^info-note" nil t)
+	(skip-chars-forward " \t=")
+	(let ((curr-note (buffer-substring (point) (line-end-position))))
+	  (if arg
+	      (progn
+		(let ((tags (split-string curr-note "[:]"))
+		      newtags)
+		  (dolist (tag tags)
+		    (unless (or (string= tag notes)
+				(string-match-p "^[ \t]+$" tag)
+				(string-equal "" tag))
+		      (push tag newtags)))
+		  (delete-region (point) (line-end-position))
+		  (when newtags
+		    (insert ":"))
+		  (insert (mapconcat #'(lambda (a) a) (nreverse newtags) ":"))
+		  (when newtags
+		    (insert ":"))))
+	      (progn
+		(goto-char (line-end-position))
+		(if (char-equal (char-before (line-end-position)) ?:)
+		    (insert (concat notes ":"))
+		  (insert (concat ":" notes ":"))))))))))
 
 (provide 'emms-ext)
 ;;; emms-ext.el ends here
