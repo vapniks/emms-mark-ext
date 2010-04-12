@@ -94,8 +94,7 @@ info-note tag for each track. "
       (if (and mark-active transient-mark-mode)
 	  (narrow-to-region (region-beginning) (region-end)))
       (goto-char (point-min))
-      (while (re-search-forward "^info-note" nil t)
-	(skip-chars-forward " \t=")
+      (while (re-search-forward "^info-note[^:\n]*" nil t)
 	(let ((curr-note (buffer-substring (point) (line-end-position))))
 	  (if arg
 	      (progn
