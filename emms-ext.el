@@ -45,6 +45,14 @@
 ;; / l album
 ;; / y year
 ;; etc
+
+(defcustom emms-tag-editor-notes-word-list '("dub" "good")
+  "List of default words for the info-note field of the emms-tag-editor buffer.
+This list is used by the emms-tag-editor-alter-notes-tag function when the user is prompted 
+for words to add to the notes field."
+  :type '(repeat string)
+  :group 'emms-tag-editor)
+
 (defun emms-ext-hook ()
   (define-key emms-mark-mode-map (kbd "/ m") 'emms-tag-mark-regexp))
 
@@ -79,43 +87,163 @@ turn it on."
 	    (when (string-match-p regexp (or field ""))
 	      (emms-mark-track 1))))))))
 
-(defun emms-tag-editor-alter-notes-tag (notes arg)
+(defun emms-tag-editor-read-tags-completing nil
+  "Read words with completion one by one until `RET' is hit twice consecutively, and return them as a list of strings.
+Completion candidates are obtained from emms-tag-editor-notes-word-list, but new words that are not in this list can
+also be entered. If a new word is entered then the user is prompted to add this word to emms-tag-editor-notes-word-list,
+and then after all words are added, they are prompted to save this list."
+  (let* ((word (completing-read "Word (press TAB to complete, RET to finish): " emms-tag-editor-notes-word-list nil nil))
+	 words changed)
+    (while (not (string= "" word))
+      (add-to-list 'words word)
+      (if (and (not (member word emms-tag-editor-notes-word-list)) (y-or-n-p "Add new word list?"))
+	  (progn (add-to-list 'emms-tag-editor-notes-word-list word)
+		 (setq changed t)))
+      (setq word (completing-read "Word: " emms-tag-editor-notes-word-list nil nil)))
+    (if (and changed (y-or-n-p "Save changed word list?"))
+	(custom-save-all))
+    words))
+
+
+(defun emms-tag-editor-alter-notes-tag (words arg)
   "Alter arbitrary word tags to the info-note tag of tracks.
 The info-tag will have a list of words separated by \":\".
-If a prefix arg is supplied then the word should be removed from the
-info-note tag for each track. "
+If a prefix arg is supplied then the words should be removed from the
+info-note tag for each track.
+If region is selected then only alter fields within region.
+WORDS should be a list of words (as strings) to add/remove. 
+If nil then the words will be prompted for from the user with completion, until a blank is entered.
+At each prompt the user can either enter one of the default words in emms-tag-editor-word-list or a new word.
+If a new word is entered the user is prompted to add it to emms-tag-editor-word-list, where it will be saved."
   (interactive
-   (list (read-from-minibuffer (if current-prefix-arg
-				   "Remove notes: "
-				 "Add notes: "))
-	 current-prefix-arg))
+   (list (emms-tag-editor-read-tags-completing) current-prefix-arg))
+  (dolist (word words)  
+    (save-excursion
+      (save-restriction
+	(if (and mark-active transient-mark-mode)
+	    (narrow-to-region (region-beginning) (region-end)))
+	(goto-char (point-min))
+	(while (re-search-forward "^info-note[^:\n]*" nil t)
+	  (let ((curr-note (buffer-substring (point) (line-end-position))))
+	    (if arg
+		(progn
+		  (let ((tags (split-string curr-note "[:]"))
+			newtags)
+		    (dolist (tag tags)
+		      (unless (or (string= tag word)
+				  (string-match-p "^[ \t]+$" tag)
+				  (string-equal "" tag))
+			(push tag newtags)))
+		    (delete-region (point) (line-end-position))
+		    (when newtags
+		      (insert ":"))
+		    (insert (mapconcat #'(lambda (a) a) (nreverse newtags) ":"))
+		    (when newtags
+		      (insert ":"))))
+	      (progn
+		(goto-char (line-end-position))
+		(if (char-equal (char-before (line-end-position)) ?:)
+		    (insert (concat word ":"))
+		  (insert (concat ":" word ":")))))))))))
+
+(defun emms-tag-editor-clear-field (field)
+  "Clear contents of a field for all tracks in tags editor.
+If region is selected then only alter fields within region."
+  (interactive
+   (list (emms-completing-read "Search tag: "
+			       (mapcar (lambda (targ)
+					 (list (symbol-name (car targ))))
+				       emms-tag-editor-tags)
+			       nil t)))
   (save-excursion
     (save-restriction
       (if (and mark-active transient-mark-mode)
 	  (narrow-to-region (region-beginning) (region-end)))
       (goto-char (point-min))
-      (while (re-search-forward "^info-note[^:\n]*" nil t)
-	(let ((curr-note (buffer-substring (point) (line-end-position))))
-	  (if arg
-	      (progn
-		(let ((tags (split-string curr-note "[:]"))
-		      newtags)
-		  (dolist (tag tags)
-		    (unless (or (string= tag notes)
-				(string-match-p "^[ \t]+$" tag)
-				(string-equal "" tag))
-		      (push tag newtags)))
-		  (delete-region (point) (line-end-position))
-		  (when newtags
-		    (insert ":"))
-		  (insert (mapconcat #'(lambda (a) a) (nreverse newtags) ":"))
-		  (when newtags
-		    (insert ":"))))
-	      (progn
-		(goto-char (line-end-position))
-		(if (char-equal (char-before (line-end-position)) ?:)
-		    (insert (concat notes ":"))
-		  (insert (concat ":" notes ":"))))))))))
+      (while (re-search-forward (concat "^" field " += ") nil t)
+	(if (not (equal (point) (line-end-position))) 
+	    (kill-line))))))
+
+
+
+;; folowing functions were copied from emms-extension.el by Andy Stewart (available on emacswiki)
+(defun emms-playlist-play-filename ()
+  "Return the filename the current play."
+  (cdr (assoc 'name (emms-playlist-current-selected-track))))
+
+(defun emms-tag-editor-next-same-field (&optional reverse)
+  "Jump to next same field."
+  (interactive)
+  (let (filed-name)
+    (save-excursion
+      (beginning-of-line)
+      (if (search-forward-regexp "^[^ ]*[ \t]+= " (line-end-position) t)
+          (setq filed-name (buffer-substring (match-beginning 0) (match-end 0)))))
+    (when filed-name
+      (if (null reverse)
+          (search-forward-regexp filed-name (point-max) t)
+        (beginning-of-line)
+        (search-backward-regexp filed-name (point-min) t))
+      (goto-char (match-end 0)))))
+
+(defun emms-tag-editor-prev-same-field ()
+  "Jump to previous same field."
+  (interactive)
+  (emms-tag-editor-next-same-field t))
+
+(defun emms-first-mark-track ()
+  "Jump to first mark track."
+  (interactive)
+  (let ((original-point (point))
+        (original-column (current-column)))
+    (goto-char (point-min))
+    (if (search-forward-regexp (format "^%c" emms-mark-char) nil t)
+        (move-to-column original-column t)
+      (goto-char original-point)
+      (message "No mark track."))))
+
+(defun emms-last-mark-track ()
+  "Jump to last mark track."
+  (interactive)
+  (let ((original-point (point))
+        (original-column (current-column)))
+    (goto-char (point-max))
+    (if (search-backward-regexp (format "^%c" emms-mark-char) nil t)
+        (move-to-column original-column t)
+      (goto-char original-point)
+      (message "No mark track."))))
+
+(defun emms-next-mark-track ()
+  "Jump to next mark track."
+  (interactive)
+  (let ((original-point (point))
+        (original-column (current-column)))
+    (if (bolp)
+        (forward-char +1))
+    (if (search-forward-regexp (format "^%c" emms-mark-char) nil t)
+        (move-to-column original-column t)
+      (goto-char original-point)
+      (message "No next mark track."))))
+
+(defun emms-prev-mark-track ()
+  "Jump to previous mark track."
+  (interactive)
+  (let ((original-point (point))
+        (original-column (current-column)))
+    (if (not (bolp))
+        (beginning-of-line))
+    (if (search-backward-regexp (format "^%c" emms-mark-char) nil t)
+        (move-to-column original-column t)
+      (goto-char original-point)
+      (message "No previous mark track."))))
+
+(defun emms-playlist-current-title ()
+  "Return the filename the current play."
+  (cdr (assoc 'info-title (emms-playlist-track-at))))
+
+
+
+
 
 (provide 'emms-ext)
 ;;; emms-ext.el ends here
