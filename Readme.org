@@ -1,0 +1,58 @@
+* Library Information
+ Readme.org --- Extra functions for emms-mark-mode and emms-tag-edit-mode
+
+ - Filename :: [[file:emms-mark-ext.el][emms-mark-ext.el]]
+ - Description :: Extra functions for emms-mark-mode and emms-tag-edit-mode
+ - Author :: Joe Bloggs <vapniks@yahoo.com>
+ - Maintainer :: Joe Bloggs <vapniks@yahoo.com>
+Copyleft (Ↄ) 2013, Joe Bloggs, all rites reversed.
+ - Created :: 2010
+ - Version :: 0.2
+ - Last-Updated :: 2013-05-28 03:20:06
+ -           By :: Joe Bloggs
+ - URL :: https://github.com/vapniks/emms-mark-ext
+ - Keywords :: convenience multimedia
+ - Compatibility :: GNU Emacs 24.3.1
+ - Package-Requires :: ((emms "3.0"))
+
+* Possible Dependencies
+
+emms
+
+* Commentary
+
+Bitcoin donations gratefully accepted :: 1DPsbd286Xq8kch5t62DfppUbcL3e6PqnT
+
+** Commands
+- `emms-mark-mark-tagged'           : Mark all tracks whose TAG field matches REGEXP.
+- `emms-mark-mark-artist'           : Mark all tracks with info-artist tag matching REGEXP.
+- `emms-mark-mark-composer'         : Mark all tracks with info-composer tag matching REGEXP.
+- `emms-mark-mark-performer'        : Mark all tracks with info-performer tag matching REGEXP.
+- `emms-mark-mark-title'            : Mark all tracks with info-title tag matching REGEXP.
+- `emms-mark-mark-year'             : Mark all tracks with info-year tag matching REGEXP.
+- `emms-mark-mark-album'            : Mark all tracks with info-album tag matching REGEXP.
+- `emms-tag-editor-alter-notes-tag' : Alter arbitrary word tags to the info-note tag of tracks.
+- `emms-tag-editor-clear-field'     : Clear contents of a field for all tracks in tags editor.
+
+** Keybindings
+The following keybindings work in the *EMMS Playlist* buffer:
+
+- "/ m" : Mark all tracks with tag field matching REGEXP
+- "/ a" : Mark all tracks with info-artist tag matching REGEXP.
+- "/ c" : Mark all tracks with info-composer tag matching REGEXP.
+- "/ p" : Mark all tracks with info-performer tag matching REGEXP.
+- "/ t" : Mark all tracks with info-title tag matching REGEXP.
+- "/ l" : Mark all tracks with info-look tag matching REGEXP.
+- "/ y" : Mark all tracks with info-year tag matching REGEXP.
+
+** Options
+
+- `emms-tag-editor-notes-word-list' : List of default words for the info-note field of the 
+                                      emms-tag-editor buffer (default = nil)
+
+* Installation
+
+ - If you have [[http://www.marmalade-repo.org/][marmalade-repo.org]], this emms-mark-ext is part of the emacs packages you can install.  
+   Just type M-x package-install emms-mark-ext marmalade 
+ - Otherwise download the library from here Lisp:emms-mark-ext, and put it in a directory in the emacs load path, like ~/.emacs.d
+ - Add (require 'emms-mark-ext) in your ~/.emacs file
