@@ -41,52 +41,41 @@
 ;;
 ;; Bitcoin donations gratefully accepted: 1DPsbd286Xq8kch5t62DfppUbcL3e6PqnT
 ;;
-;; How to create documentation and distribute package:
-;;
-;;     1) Remember to add ;;;###autoload magic cookies if possible
-;;     2) Generate a bitcoin address for donations with shell command: bitcoin getaccountaddress emms-mark-ext
-;;        and place address after "Commentary:" above.
-;;     3) Use org-readme-top-header-to-readme to create initial Readme.org file.
-;;     4) Use M-x auto-document to insert descriptions of commands and documents
-;;     5) Create documentation in the Readme.org file:
-;;        - Use org-mode features for structuring the data.
-;;        - Divide the commands into different categories and create headings
-;;          containing org lists of the commands in each category.
-;;        - Create headings with any other extra information if needed (e.g. customization).
-;;     6) In this buffer use org-readme-to-commentary to fill Commentary section with
-;;        documentation from Readme.org file.
-;;     7) Make any necessary adjustments to the documentation in this file (e.g. remove the installation
-;;        and customization sections added in previous step since these should already be present).
-;;     8) Use org-readme-marmalade-post and org-readme-convert-to-emacswiki to post
-;;        the library on Marmalade and EmacsWiki respectively.
-;; 
-;;;;
+;; This library adds commands for marking tracks in the *EMMS Playlist* buffer,
+;; and for altering tags in the *EMMS-TAGS* buffer. The new commands and keybinding
+;; are listed below.
 
 ;;; Commands:
 ;;
-;; Below are complete command list:
-;;
 ;;  `emms-mark-mark-tagged'
 ;;    Mark all tracks whose TAG field matches REGEXP.
+;;  `emms-mark-mark-artist'
+;;    Mark all tracks with info-artist tag matching REGEXP.
+;;  `emms-mark-mark-composer'
+;;    Mark all tracks with info-composer tag matching REGEXP.
+;;  `emms-mark-mark-performer'
+;;    Mark all tracks with info-performer tag matching REGEXP.
+;;  `emms-mark-mark-title'
+;;    Mark all tracks with info-title tag matching REGEXP.
+;;  `emms-mark-mark-year'
+;;    Mark all tracks with info-year tag matching REGEXP.
+;;  `emms-mark-mark-album'
+;;    Mark all tracks with info-album tag matching REGEXP.
 ;;  `emms-tag-editor-alter-notes-tag'
 ;;    Alter arbitrary word tags to the info-note tag of tracks.
 ;;  `emms-tag-editor-clear-field'
 ;;    Clear contents of a field for all tracks in tags editor.
 ;;
 
-;;; Commentary:
+;;; Keybindings (in the playlist buffer):
 
-;; `emms-mark-mark-tagged' can be used to mark based on a tag. It works at
-;; `emms-mark-mode', if it's not in `emms-mark-mode', `emms-mark-mode' will 
-;; be turned on automatically.
-
-;; When in `emms-mark-mode', the following keybindings are defined for search
-;; based on tags:
-;; '/ m'    `emms-mark-mark-tagged'
-
-;; `emms-tag-editor-alter-notes-tag' can be used to add/remove word from
-;; tracks info-note tag. And the added tag will be separated by ":".
-
+;; "/ m" : Mark all tracks with tag field matching REGEXP
+;; "/ a" : Mark all tracks with info-artist tag matching REGEXP.
+;; "/ c" : Mark all tracks with info-composer tag matching REGEXP.
+;; "/ p" : Mark all tracks with info-performer tag matching REGEXP.
+;; "/ t" : Mark all tracks with info-title tag matching REGEXP.
+;; "/ l" : Mark all tracks with info-look tag matching REGEXP.
+;; "/ y" : Mark all tracks with info-year tag matching REGEXP.
 
 
 ;;; Installation:
@@ -110,7 +99,7 @@
 ;;    default = nil
 
 ;;
-;; All of the above can customized by:
+;; All of the above can be customized by:
 ;;      M-x customize-group RET emms-mark-ext RET
 ;;
 
@@ -160,6 +149,7 @@ for words to add to the notes field."
 
 (add-hook 'emms-playlist-mode-hook 'emms-mark-ext-hook)
 
+;;;###autoload
 (defun emms-mark-mark-tagged (tag regexp arg)
   "Mark all tracks whose TAG field matches REGEXP.
 A prefix argument means to unmark them instead.
@@ -218,7 +208,7 @@ and then after all words are added, they are prompted to save this list."
 	(custom-save-all))
     words))
 
-
+;;;###autoload
 (defun emms-tag-editor-alter-notes-tag (words arg)
   "Alter arbitrary word tags to the info-note tag of tracks.
 The info-tag will have a list of words separated by \":\".
@@ -260,6 +250,7 @@ If a new word is entered the user is prompted to add it to emms-tag-editor-word-
 		    (insert (concat word ":"))
 		  (insert (concat ":" word ":")))))))))))
 
+;;;###autoload
 (defun emms-tag-editor-clear-field (field)
   "Clear contents of a field for all tracks in tags editor.
 If region is selected then only alter fields within region."
