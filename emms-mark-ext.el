@@ -67,7 +67,7 @@
 ;;    Clear contents of a field for all tracks in tags editor.
 ;;
 
-;;; Keybindings (in the playlist buffer):
+;;; Keybindings (in the *EMMS Playlist* buffer):
 
 ;; "/ m" : Mark all tracks with tag field matching REGEXP
 ;; "/ a" : Mark all tracks with info-artist tag matching REGEXP.
