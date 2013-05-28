@@ -1,14 +1,32 @@
-;;; emms-ext.el --- Extension functions to EMMS
+;;; emms-mark-ext.el --- Extra functions for emms-mark-mode and emms-tag-edit-mode
 
-;; Copyright (C) 2010  
-
+;; Filename: emms-mark-ext.el
+;; Description: Extra functions for emms-mark-mode and emms-tag-edit-mode
 ;; Author: Joe Bloggs <vapniks@yahoo.com>
-;; Keywords: emms, music
+;; Maintainer: Joe Bloggs <vapniks@yahoo.com>
+;; Copyleft (Ↄ) 2013, Joe Bloggs, all rites reversed.
+;; Created: 2010
+;; Version: 0.2
+;; Last-Updated: 2013-05-28 03:20:06
+;;           By: Joe Bloggs
+;; URL: https://github.com/vapniks/emms-mark-ext
+;; Keywords: convenience multimedia
+;; Compatibility: GNU Emacs 24.3.1
+;; Package-Requires: ((emms "3.0"))
+;;
+;; Features that might be required by this library:
+;;
+;; emms
+;;
 
+;;; This file is NOT part of GNU Emacs
+
+;;; License
+;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
 
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,49 +34,133 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program; see the file COPYING.
+;; If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary: 
+;;
+;; Bitcoin donations gratefully accepted: 1DPsbd286Xq8kch5t62DfppUbcL3e6PqnT
+;;
+;; How to create documentation and distribute package:
+;;
+;;     1) Remember to add ;;;###autoload magic cookies if possible
+;;     2) Generate a bitcoin address for donations with shell command: bitcoin getaccountaddress emms-mark-ext
+;;        and place address after "Commentary:" above.
+;;     3) Use org-readme-top-header-to-readme to create initial Readme.org file.
+;;     4) Use M-x auto-document to insert descriptions of commands and documents
+;;     5) Create documentation in the Readme.org file:
+;;        - Use org-mode features for structuring the data.
+;;        - Divide the commands into different categories and create headings
+;;          containing org lists of the commands in each category.
+;;        - Create headings with any other extra information if needed (e.g. customization).
+;;     6) In this buffer use org-readme-to-commentary to fill Commentary section with
+;;        documentation from Readme.org file.
+;;     7) Make any necessary adjustments to the documentation in this file (e.g. remove the installation
+;;        and customization sections added in previous step since these should already be present).
+;;     8) Use org-readme-marmalade-post and org-readme-convert-to-emacswiki to post
+;;        the library on Marmalade and EmacsWiki respectively.
+;; 
+;;;;
+
+;;; Commands:
+;;
+;; Below are complete command list:
+;;
+;;  `emms-mark-mark-tagged'
+;;    Mark all tracks whose TAG field matches REGEXP.
+;;  `emms-tag-editor-alter-notes-tag'
+;;    Alter arbitrary word tags to the info-note tag of tracks.
+;;  `emms-tag-editor-clear-field'
+;;    Clear contents of a field for all tracks in tags editor.
+;;
 
 ;;; Commentary:
 
-;; `emms-tag-mark-regexp' can be used to mark based on a tag. It works at
+;; `emms-mark-mark-tagged' can be used to mark based on a tag. It works at
 ;; `emms-mark-mode', if it's not in `emms-mark-mode', `emms-mark-mode' will 
 ;; be turned on automatically.
 
 ;; When in `emms-mark-mode', the following keybindings are defined for search
 ;; based on tags:
-;; '/ m'    `emms-tag-mark-regexp'
-
-;; TODO : we can also define other utility functions to search for different fields
-;; such as `emms-tag-mark-regexp-artist', `emms-tag-mark-regexp-album', etc.
+;; '/ m'    `emms-mark-mark-tagged'
 
 ;; `emms-tag-editor-alter-notes-tag' can be used to add/remove word from
 ;; tracks info-note tag. And the added tag will be separated by ":".
 
-;;; Code:
+
+
+;;; Installation:
+;;
+;; Put emms-mark-ext.el in a directory in your load-path, e.g. ~/.emacs.d/
+;; You can add a directory to your load-path with the following line in ~/.emacs
+;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+;; where ~/elisp is the directory you want to add 
+;; (you don't need to do this for ~/.emacs.d - it's added by default).
+;;
+;; Add the following to your ~/.emacs startup file.
+;;
+;; (require 'emms-mark-ext)
+
+;;; Customizable Options:
+;;
+;; Below are customizable option list:
+;;
+;;  `emms-tag-editor-notes-word-list'
+;;    List of default words for the info-note field of the emms-tag-editor buffer.
+;;    default = nil
+
+;;
+;; All of the above can customized by:
+;;      M-x customize-group RET emms-mark-ext RET
+;;
+
+;;; Change log:
+;;
+;; 2013/05/28
+;;      * Updated for upload to Marmalade 
+;;
+;; 2010
+;;      * First released.
+;; 
+
+;;; Acknowledgements:
+;;
+;; 
+;;
+
+;;; TODO
+;;
+;; 
+;;
+
+;;; Require
+
 (require 'emms-mark)
 
-;; TODO:
-;; / a for artist
-;; / C composer
-;; / p performer
-;; / t title
-;; / l album
-;; / y year
-;; etc
+;;; Code:
 
-(defcustom emms-tag-editor-notes-word-list '("dub" "good")
+(defcustom emms-tag-editor-notes-word-list nil
   "List of default words for the info-note field of the emms-tag-editor buffer.
 This list is used by the emms-tag-editor-alter-notes-tag function when the user is prompted 
 for words to add to the notes field."
   :type '(repeat string)
   :group 'emms-tag-editor)
 
-(defun emms-ext-hook ()
-  (define-key emms-mark-mode-map (kbd "/ m") 'emms-tag-mark-regexp))
 
-(add-hook 'emms-playlist-mode-hook 'emms-ext-hook)
+(defun emms-mark-ext-hook ()
+  (define-prefix-command 'emms-mark-tag-match-map)
+  (define-key emms-mark-mode-map (kbd "/") 'emms-mark-tag-match-map)
+  (define-key emms-mark-mode-map (kbd "/ m") 'emms-mark-mark-tagged)
+  (define-key emms-mark-mode-map (kbd "/ a") 'emms-mark-mark-artist)
+  (define-key emms-mark-mode-map (kbd "/ c") 'emms-mark-mark-composer)
+  (define-key emms-mark-mode-map (kbd "/ p") 'emms-mark-mark-performer)
+  (define-key emms-mark-mode-map (kbd "/ t") 'emms-mark-mark-title)
+  (define-key emms-mark-mode-map (kbd "/ l") 'emms-mark-mark-album)
+  (define-key emms-mark-mode-map (kbd "/ y") 'emms-mark-mark-year))
 
-(defun emms-tag-mark-regexp (tag regexp arg)
+(add-hook 'emms-playlist-mode-hook 'emms-mark-ext-hook)
+
+(defun emms-mark-mark-tagged (tag regexp arg)
   "Mark all tracks whose TAG field matches REGEXP.
 A prefix argument means to unmark them instead.
 NOTE: if emms-mark-mode is not turned on, this function will
@@ -70,10 +172,9 @@ turn it on."
 				       emms-tag-editor-tags)
 			       nil t)
 	 (read-from-minibuffer (if current-prefix-arg
-				   "UnMark tracks matching: "
-				 "Mark tracks matching: "))
+				   "Unmark tracks with artist matching regexp: "
+				 "Mark tracks with artist matching regexp: "))
 	 current-prefix-arg))
-
   (emms-mark-mode)
   (let ((emms-mark-char (if arg ?\040 ?*)))
     (save-excursion
@@ -86,6 +187,19 @@ turn it on."
 		 (field (emms-track-get track (intern tag))))
 	    (when (string-match-p regexp (or field ""))
 	      (emms-mark-track 1))))))))
+
+(loop for tag in '("artist" "composer" "performer" "title" "album" "year")
+      do (eval `(defun ,(intern (concat "emms-mark-mark-" tag)) (regexp arg)
+                  ,(concat "Mark all tracks with " tag "-tag matching REGEXP.
+A prefix argument means to unmark them instead.
+NOTE: if emms-mark-mode is not turned on, this function will
+turn it on.")
+                  (interactive (list (read-from-minibuffer
+                                      (if current-prefix-arg
+                                          ,(concat "Unmark tracks with " tag " matching regexp: ")
+                                        ,(concat "Mark tracks with " tag " matching regexp: ")))
+                                     current-prefix-arg))
+                  (emms-mark-mark-tagged ,(concat "info-" tag) regexp arg))))
 
 (defun emms-tag-editor-read-tags-completing nil
   "Read words with completion one by one until `RET' is hit twice consecutively, and return them as a list of strings.
@@ -164,86 +278,9 @@ If region is selected then only alter fields within region."
 	(if (not (equal (point) (line-end-position))) 
 	    (kill-line))))))
 
+(provide 'emms-mark-ext)
 
+;; (magit-push)
+;; (yaoddmuse-post "EmacsWiki" "emms-mark-ext.el" (buffer-name) (buffer-string) "update")
 
-;; folowing functions were copied from emms-extension.el by Andy Stewart (available on emacswiki)
-(defun emms-playlist-play-filename ()
-  "Return the filename the current play."
-  (cdr (assoc 'name (emms-playlist-current-selected-track))))
-
-(defun emms-tag-editor-next-same-field (&optional reverse)
-  "Jump to next same field."
-  (interactive)
-  (let (filed-name)
-    (save-excursion
-      (beginning-of-line)
-      (if (search-forward-regexp "^[^ ]*[ \t]+= " (line-end-position) t)
-          (setq filed-name (buffer-substring (match-beginning 0) (match-end 0)))))
-    (when filed-name
-      (if (null reverse)
-          (search-forward-regexp filed-name (point-max) t)
-        (beginning-of-line)
-        (search-backward-regexp filed-name (point-min) t))
-      (goto-char (match-end 0)))))
-
-(defun emms-tag-editor-prev-same-field ()
-  "Jump to previous same field."
-  (interactive)
-  (emms-tag-editor-next-same-field t))
-
-(defun emms-first-mark-track ()
-  "Jump to first mark track."
-  (interactive)
-  (let ((original-point (point))
-        (original-column (current-column)))
-    (goto-char (point-min))
-    (if (search-forward-regexp (format "^%c" emms-mark-char) nil t)
-        (move-to-column original-column t)
-      (goto-char original-point)
-      (message "No mark track."))))
-
-(defun emms-last-mark-track ()
-  "Jump to last mark track."
-  (interactive)
-  (let ((original-point (point))
-        (original-column (current-column)))
-    (goto-char (point-max))
-    (if (search-backward-regexp (format "^%c" emms-mark-char) nil t)
-        (move-to-column original-column t)
-      (goto-char original-point)
-      (message "No mark track."))))
-
-(defun emms-next-mark-track ()
-  "Jump to next mark track."
-  (interactive)
-  (let ((original-point (point))
-        (original-column (current-column)))
-    (if (bolp)
-        (forward-char +1))
-    (if (search-forward-regexp (format "^%c" emms-mark-char) nil t)
-        (move-to-column original-column t)
-      (goto-char original-point)
-      (message "No next mark track."))))
-
-(defun emms-prev-mark-track ()
-  "Jump to previous mark track."
-  (interactive)
-  (let ((original-point (point))
-        (original-column (current-column)))
-    (if (not (bolp))
-        (beginning-of-line))
-    (if (search-backward-regexp (format "^%c" emms-mark-char) nil t)
-        (move-to-column original-column t)
-      (goto-char original-point)
-      (message "No previous mark track."))))
-
-(defun emms-playlist-current-title ()
-  "Return the filename the current play."
-  (cdr (assoc 'info-title (emms-playlist-track-at))))
-
-
-
-
-
-(provide 'emms-ext)
-;;; emms-ext.el ends here
+;;; emms-mark-ext.el ends here
