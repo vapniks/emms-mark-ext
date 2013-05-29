@@ -6,7 +6,7 @@
 ;; Maintainer: Joe Bloggs <vapniks@yahoo.com>
 ;; Copyleft (Ↄ) 2013, Joe Bloggs, all rites reversed.
 ;; Created: 2010
-;; Version: 0.2
+;; Version: 0.3
 ;; Last-Updated: 2013-05-28 03:20:06
 ;;           By: Joe Bloggs
 ;; URL: https://github.com/vapniks/emms-mark-ext
